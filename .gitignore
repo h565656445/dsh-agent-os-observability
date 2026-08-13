@@ -1,0 +1,16 @@
+# PowerShell
+*.ps1.xml
+*.log
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 本地凭据/密钥（防御）
+.env
+*.pem
+*.key
+credentials*

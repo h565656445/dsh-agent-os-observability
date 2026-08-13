@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.hermes-harness/schemas/agent_os_observability_stage_result.schema.json",
+  "title": "Hermes Agent OS Observability Stage Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "observation_id", "stage_id", "finished_at", "status", "usage", "quality_measurements", "cost_evidence", "failure_reasons"],
+  "properties": {
+    "schema_version": { "const": "0.1" },
+    "observation_id": { "type": "string", "pattern": "^agent-os-observation-[0-9]{8}-[0-9]{6}-[a-f0-9]{8}$" },
+    "stage_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+    "finished_at": { "type": "string", "format": "date-time" },
+    "status": { "enum": ["succeeded", "failed"] },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duration_ms", "model_calls", "input_tokens", "output_tokens", "cost_microunits"],
+      "properties": {
+        "duration_ms": { "type": "integer", "minimum": 0, "maximum": 1000000000000000 },
+        "model_calls": { "type": "integer", "minimum": 0, "maximum": 1000000000000000 },
+        "input_tokens": { "type": "integer", "minimum": 0, "maximum": 1000000000000000 },
+        "output_tokens": { "type": "integer", "minimum": 0, "maximum": 1000000000000000 },
+        "cost_microunits": { "type": "integer", "minimum": 0, "maximum": 1000000000000000 }
+      }
+    },
+    "quality_measurements": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["gate_id", "metric", "unit", "value", "evidence"],
+        "properties": {
+          "gate_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+          "metric": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+          "unit": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._%/-]{0,31}$" },
+          "value": { "type": "integer", "minimum": -1000000000000000, "maximum": 1000000000000000 },
+          "evidence": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "sha256"],
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "sha256": { "type": "string", "pattern": "^[A-F0-9]{64}$" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cost_evidence": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[A-F0-9]{64}$" }
+        }
+      }
+    },
+    "failure_reasons": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1 } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "succeeded" } }, "required": ["status"] },
+      "then": { "properties": { "failure_reasons": { "maxItems": 0 } } },
+      "else": { "properties": { "failure_reasons": { "minItems": 1 } } }
+    }
+  ]
+}
